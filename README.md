@@ -20,6 +20,7 @@ Supported actions:
 - Drag thumbnails to reorder photos.
 - Choose `15:9`, `4:3`, `3:2`, or a custom vertical ratio.
 - Toggle and customize a small white bottom watermark.
+- Remember ratio and watermark preferences in the browser for the next visit.
 - Export PNG. The default `15:9` output is `1200 x 2000`.
 
 ## Files

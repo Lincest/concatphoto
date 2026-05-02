@@ -6,6 +6,7 @@ const BACKGROUND_COLOR = "#f3f5fb";
 const MAX_WORKING_IMAGE_EDGE = 2400;
 const IMPORT_CONCURRENCY = 2;
 const DEFAULT_WATERMARK = `MOREALITYPHOTOGRAPH@${new Date().getFullYear()}`;
+const PREFERENCES_KEY = "concatphoto.preferences.v1";
 
 const state = {
   images: [],
@@ -49,6 +50,50 @@ function clamp(value, min, max) {
 function normalize(values) {
   const total = values.reduce((sum, value) => sum + value, 0) || 1;
   return values.map((value) => value / total);
+}
+
+function getRatioPresetValue(height, width) {
+  const value = `${height}:${width}`;
+  return ["15:9", "4:3", "3:2"].includes(value) ? value : "custom";
+}
+
+function loadPreferences() {
+  try {
+    const raw = window.localStorage.getItem(PREFERENCES_KEY);
+    if (!raw) return;
+    const preferences = JSON.parse(raw);
+
+    state.ratioHeight = clamp(Number(preferences.ratioHeight) || state.ratioHeight, 1, 99);
+    state.ratioWidth = clamp(Number(preferences.ratioWidth) || state.ratioWidth, 1, 99);
+    state.watermarkEnabled =
+      typeof preferences.watermarkEnabled === "boolean"
+        ? preferences.watermarkEnabled
+        : state.watermarkEnabled;
+    state.watermarkText =
+      typeof preferences.watermarkText === "string" ? preferences.watermarkText : state.watermarkText;
+  } catch {
+    window.localStorage.removeItem(PREFERENCES_KEY);
+  }
+}
+
+function savePreferences() {
+  const preferences = {
+    ratioHeight: state.ratioHeight,
+    ratioWidth: state.ratioWidth,
+    watermarkEnabled: state.watermarkEnabled,
+    watermarkText: state.watermarkText,
+  };
+  window.localStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences));
+}
+
+function syncControlsFromState() {
+  const presetValue = getRatioPresetValue(state.ratioHeight, state.ratioWidth);
+  ratioPreset.value = presetValue;
+  customRatioFields.hidden = presetValue !== "custom";
+  customRatioHeight.value = state.ratioHeight;
+  customRatioWidth.value = state.ratioWidth;
+  watermarkEnabled.checked = state.watermarkEnabled;
+  watermarkText.value = state.watermarkText;
 }
 
 function updateCanvasSize() {
@@ -667,10 +712,11 @@ function exportCanvas() {
   link.click();
 }
 
-function setRatio(height, width) {
+function setRatio(height, width, shouldSave = true) {
   state.ratioHeight = clamp(Number(height) || 15, 1, 99);
   state.ratioWidth = clamp(Number(width) || 9, 1, 99);
   updateCanvasSize();
+  if (shouldSave) savePreferences();
   drawPreview();
 }
 
@@ -685,15 +731,16 @@ document.addEventListener("paste", (event) => {
 });
 
 exportButton.addEventListener("click", exportCanvas);
-watermarkText.value = DEFAULT_WATERMARK;
 
 watermarkEnabled.addEventListener("change", () => {
   state.watermarkEnabled = watermarkEnabled.checked;
+  savePreferences();
   drawPreview();
 });
 
 watermarkText.addEventListener("input", () => {
   state.watermarkText = watermarkText.value;
+  savePreferences();
   drawPreview();
 });
 
@@ -805,5 +852,7 @@ canvas.addEventListener("pointercancel", () => {
 });
 
 rebuildLayout();
+loadPreferences();
+syncControlsFromState();
 updateCanvasSize();
 drawPreview();
