@@ -1,0 +1,34 @@
+# Concat Photo
+
+A pure frontend photo collage tool for creating vertical image layouts.
+
+## Usage
+
+Open `index.html` directly in a browser.
+
+Supported actions:
+
+- Upload multiple photos.
+- Drop photos onto the canvas.
+- Paste photos from the clipboard.
+- Show import progress while photos are processed.
+- Generate one collage region per uploaded photo.
+- Use compressed working images for smooth preview, then rerender exports from original images.
+- Drag canvas divider guides to resize photo regions.
+- Drag a photo inside its region to adjust crop position.
+- Drag a photo onto another canvas region to reorder the layout.
+- Drag thumbnails to reorder photos.
+- Choose `15:9`, `4:3`, `3:2`, or a custom vertical ratio.
+- Toggle and customize a small white bottom watermark.
+- Export PNG. The default `15:9` output is `1200 x 2000`.
+
+## Files
+
+- `index.html`: Page structure.
+- `styles.css`: Interface styles.
+- `app.js`: Photo loading, dynamic layout, canvas interaction, rendering, watermarking, and export logic.
+
+## Vercel Git Integration
+
+Connect the GitHub repository from the Vercel dashboard with `New Project`.
+Vercel will automatically deploy pushes to the production branch and create preview deployments for other branches and pull requests.

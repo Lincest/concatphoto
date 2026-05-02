@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Concat Photo</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace" aria-label="Photo collage workspace">
+        <header class="topbar">
+          <div class="topbar-actions">
+            <button class="primary-button" id="exportButton" type="button">Export PNG</button>
+          </div>
+        </header>
+
+        <div class="canvas-wrap">
+          <canvas id="previewCanvas" width="1200" height="2000" aria-label="Collage preview"></canvas>
+          <div class="drop-overlay" id="dropOverlay">
+            <strong>Drop photos here</strong>
+            <span>You can also paste or upload from the panel</span>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel" aria-label="Controls">
+        <section class="control-section">
+          <div class="section-heading">
+            <h2>Photos</h2>
+            <span id="imageCount">0 photos</span>
+          </div>
+          <label class="upload-zone" for="fileInput">
+            <input id="fileInput" type="file" accept="image/*" multiple />
+            <span class="upload-icon" aria-hidden="true">＋</span>
+            <span>Upload or drop onto canvas</span>
+          </label>
+          <div class="progress" id="uploadProgress" hidden>
+            <div class="progress-bar"><span id="uploadProgressBar"></span></div>
+            <span id="uploadProgressText">Processing photos</span>
+          </div>
+          <div class="thumb-grid" id="thumbGrid"></div>
+        </section>
+
+        <section class="control-section">
+          <div class="section-heading">
+            <h2>Ratio</h2>
+          </div>
+          <label class="field">
+            <span>Canvas ratio</span>
+            <select id="ratioPreset">
+              <option value="15:9" selected>15:9</option>
+              <option value="4:3">4:3</option>
+              <option value="3:2">3:2</option>
+              <option value="custom">Custom</option>
+            </select>
+          </label>
+          <div class="ratio-custom" id="customRatioFields" hidden>
+            <label class="field">
+              <span>Height</span>
+              <input id="customRatioHeight" type="number" min="1" max="99" value="15" />
+            </label>
+            <label class="field">
+              <span>Width</span>
+              <input id="customRatioWidth" type="number" min="1" max="99" value="9" />
+            </label>
+          </div>
+        </section>
+
+        <section class="control-section">
+          <div class="section-heading">
+            <h2>Watermark</h2>
+          </div>
+          <label class="check-field">
+            <input id="watermarkEnabled" type="checkbox" checked />
+            <span>Show watermark</span>
+          </label>
+          <label class="field">
+            <span>Text</span>
+            <input id="watermarkText" type="text" />
+          </label>
+        </section>
+      </aside>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
