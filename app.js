@@ -17,6 +17,7 @@ const state = {
   rows: [],
   ratioHeight: 15,
   ratioWidth: 9,
+  layoutPattern: "",
   watermarkEnabled: true,
   watermarkText: DEFAULT_WATERMARK,
   importTotal: 0,
@@ -41,6 +42,8 @@ const ratioPreset = document.querySelector("#ratioPreset");
 const customRatioFields = document.querySelector("#customRatioFields");
 const customRatioHeight = document.querySelector("#customRatioHeight");
 const customRatioWidth = document.querySelector("#customRatioWidth");
+const layoutPattern = document.querySelector("#layoutPattern");
+const layoutHint = document.querySelector("#layoutHint");
 const watermarkEnabled = document.querySelector("#watermarkEnabled");
 const watermarkText = document.querySelector("#watermarkText");
 const uploadProgress = document.querySelector("#uploadProgress");
@@ -75,6 +78,8 @@ function loadPreferences() {
         : state.watermarkEnabled;
     state.watermarkText =
       typeof preferences.watermarkText === "string" ? preferences.watermarkText : state.watermarkText;
+    state.layoutPattern =
+      typeof preferences.layoutPattern === "string" ? preferences.layoutPattern : state.layoutPattern;
   } catch {
     window.localStorage.removeItem(PREFERENCES_KEY);
   }
@@ -84,6 +89,7 @@ function savePreferences() {
   const preferences = {
     ratioHeight: state.ratioHeight,
     ratioWidth: state.ratioWidth,
+    layoutPattern: state.layoutPattern,
     watermarkEnabled: state.watermarkEnabled,
     watermarkText: state.watermarkText,
   };
@@ -96,6 +102,7 @@ function syncControlsFromState() {
   customRatioFields.hidden = presetValue !== "custom";
   customRatioHeight.value = state.ratioHeight;
   customRatioWidth.value = state.ratioWidth;
+  layoutPattern.value = state.layoutPattern;
   watermarkEnabled.checked = state.watermarkEnabled;
   watermarkText.value = state.watermarkText;
 }
@@ -160,8 +167,47 @@ function distributeRows(count) {
   return rows;
 }
 
+function parseLayoutPattern(pattern, imageCount) {
+  const cleaned = pattern.trim();
+  if (!cleaned) {
+    return { rowCounts: distributeRows(imageCount), error: "" };
+  }
+
+  if (!/^\d+(\s*-\s*\d+)*$/.test(cleaned)) {
+    return {
+      rowCounts: distributeRows(imageCount),
+      error: "Pattern must look like 1-2, 2-1, 3, or 1-1-1.",
+    };
+  }
+
+  const rowCounts = cleaned.split("-").map((part) => Number(part.trim()));
+  const total = rowCounts.reduce((sum, count) => sum + count, 0);
+  if (rowCounts.some((count) => count < 1)) {
+    return {
+      rowCounts: distributeRows(imageCount),
+      error: "Each row must contain at least one photo.",
+    };
+  }
+
+  if (total !== imageCount) {
+    return {
+      rowCounts: distributeRows(imageCount),
+      error: `Pattern needs ${imageCount} ${imageCount === 1 ? "photo" : "photos"}, but it has ${total}.`,
+    };
+  }
+
+  return { rowCounts, error: "" };
+}
+
+function updateLayoutHint(error = "") {
+  layoutHint.textContent =
+    error || "Use row counts separated by hyphens. Example: 1-2 means one photo above two photos.";
+  layoutHint.classList.toggle("is-error", Boolean(error));
+}
+
 function rebuildLayout() {
-  const rowCounts = distributeRows(state.images.length);
+  const { rowCounts, error } = parseLayoutPattern(state.layoutPattern, state.images.length);
+  updateLayoutHint(error);
   const oldRows = state.rows;
   state.rows = rowCounts.map((cellCount, rowIndex) => {
     const oldRow = oldRows[rowIndex];
@@ -803,6 +849,13 @@ watermarkEnabled.addEventListener("change", () => {
 watermarkText.addEventListener("input", () => {
   state.watermarkText = watermarkText.value;
   savePreferences();
+  drawPreview();
+});
+
+layoutPattern.addEventListener("input", () => {
+  state.layoutPattern = layoutPattern.value.trim();
+  savePreferences();
+  rebuildLayout();
   drawPreview();
 });
 

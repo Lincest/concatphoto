@@ -357,6 +357,17 @@ h2 {
   accent-color: var(--accent);
 }
 
+.hint {
+  margin: -2px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.hint.is-error {
+  color: #b42318;
+}
+
 .field input[type="color"] {
   height: 38px;
   padding: 4px;
