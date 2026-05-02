@@ -984,36 +984,6 @@ canvas.addEventListener("pointermove", (event) => {
   drawPreview();
 });
 
-canvas.addEventListener(
-  "wheel",
-  (event) => {
-    const point = getCanvasPoint(event);
-    const cell = hitTestCell(point);
-    const image = cell ? state.images[cell.imageIndex] : null;
-    if (!image || image.id !== state.selectedImageId) return;
-
-    event.preventDefault();
-    const rect = cellRectWithGap(cell);
-    const beforeSource = imageSourceRect(image, rect, image.previewWidth, image.previewHeight);
-    const localX = clamp((point.x - rect.x) / rect.w, 0, 1);
-    const localY = clamp((point.y - rect.y) / rect.h, 0, 1);
-    const sourcePointX = beforeSource.sourceX + beforeSource.sourceWidth * localX;
-    const sourcePointY = beforeSource.sourceY + beforeSource.sourceHeight * localY;
-    const zoomFactor = event.deltaY < 0 ? 1.08 : 1 / 1.08;
-    image.zoom = clamp((image.zoom || 1) * zoomFactor, MIN_IMAGE_ZOOM, MAX_IMAGE_ZOOM);
-    const afterSource = imageSourceRect(image, rect, image.previewWidth, image.previewHeight);
-    if (afterSource.overflowX > 0) {
-      image.cropX = clamp((sourcePointX - afterSource.sourceWidth * localX) / afterSource.overflowX, 0, 1);
-    }
-    if (afterSource.overflowY > 0) {
-      image.cropY = clamp((sourcePointY - afterSource.sourceHeight * localY) / afterSource.overflowY, 0, 1);
-    }
-    syncZoomControls();
-    drawPreview();
-  },
-  { passive: false },
-);
-
 canvas.addEventListener("pointerup", (event) => {
   if (state.interaction?.type === "crop") {
     const point = getCanvasPoint(event);
@@ -1043,11 +1013,23 @@ document.addEventListener("keydown", (event) => {
     target instanceof HTMLSelectElement ||
     target?.isContentEditable;
 
-  if (isEditable || !["Backspace", "Delete"].includes(event.key)) return;
-  if (!state.selectedImageId) return;
+  if (isEditable || !state.selectedImageId) return;
 
-  event.preventDefault();
-  removeSelectedImage();
+  if (["Backspace", "Delete"].includes(event.key)) {
+    event.preventDefault();
+    removeSelectedImage();
+    return;
+  }
+
+  if (event.key === "-" || event.key === "=") {
+    const selectedImage = getSelectedImage();
+    if (!selectedImage) return;
+    event.preventDefault();
+    const zoomFactor = event.key === "=" ? 1.08 : 1 / 1.08;
+    selectedImage.zoom = clamp((selectedImage.zoom || 1) * zoomFactor, MIN_IMAGE_ZOOM, MAX_IMAGE_ZOOM);
+    syncZoomControls();
+    drawPreview();
+  }
 });
 
 ["dragenter", "dragover"].forEach((name) => {
