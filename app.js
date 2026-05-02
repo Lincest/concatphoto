@@ -1,5 +1,7 @@
 let OUTPUT_WIDTH = 1200;
 let OUTPUT_HEIGHT = 2000;
+const PREVIEW_WIDTH = 1200;
+const EXPORT_LONG_EDGE = 2400;
 const MIN_CELL_RATIO = 0.12;
 const HANDLE_HIT_SIZE = 16;
 const BACKGROUND_COLOR = "#f3f5fb";
@@ -99,12 +101,27 @@ function syncControlsFromState() {
 }
 
 function updateCanvasSize() {
-  OUTPUT_WIDTH = 1200;
+  OUTPUT_WIDTH = PREVIEW_WIDTH;
   OUTPUT_HEIGHT = Math.round(OUTPUT_WIDTH * (state.ratioHeight / state.ratioWidth));
   canvas.width = OUTPUT_WIDTH;
   canvas.height = OUTPUT_HEIGHT;
   canvas.style.setProperty("--canvas-aspect", `${state.ratioWidth} / ${state.ratioHeight}`);
   canvas.style.setProperty("--canvas-width-ratio", String(state.ratioWidth / state.ratioHeight));
+}
+
+function getExportSize() {
+  const ratio = state.ratioHeight / state.ratioWidth;
+  if (ratio >= 1) {
+    return {
+      width: Math.round(EXPORT_LONG_EDGE / ratio),
+      height: EXPORT_LONG_EDGE,
+    };
+  }
+
+  return {
+    width: EXPORT_LONG_EDGE,
+    height: Math.round(EXPORT_LONG_EDGE * ratio),
+  };
 }
 
 function scheduleRender({ layout = false, thumbs = false } = {}) {
@@ -703,10 +720,17 @@ function updateCursor(event) {
 }
 
 function createExportCanvas() {
+  const previousWidth = OUTPUT_WIDTH;
+  const previousHeight = OUTPUT_HEIGHT;
+  const exportSize = getExportSize();
   const exportCanvasElement = document.createElement("canvas");
-  exportCanvasElement.width = OUTPUT_WIDTH;
-  exportCanvasElement.height = OUTPUT_HEIGHT;
+  exportCanvasElement.width = exportSize.width;
+  exportCanvasElement.height = exportSize.height;
+  OUTPUT_WIDTH = exportSize.width;
+  OUTPUT_HEIGHT = exportSize.height;
   render(exportCanvasElement.getContext("2d"), false, true);
+  OUTPUT_WIDTH = previousWidth;
+  OUTPUT_HEIGHT = previousHeight;
   return exportCanvasElement;
 }
 

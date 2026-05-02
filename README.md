@@ -22,7 +22,7 @@ Supported actions:
 - Toggle and customize a small white bottom watermark.
 - Remember ratio and watermark preferences in the browser for the next visit.
 - Copy the rendered PNG to the clipboard when supported by the browser.
-- Export PNG. The default `15:9` output is `1200 x 2000`.
+- Export PNG with a `2400px` long edge. For example, `15:9` exports as `1440 x 2400`, and `2:3` exports as `2400 x 1600`.
 
 ## Files
 
