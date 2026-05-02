@@ -32,6 +32,7 @@ const ctx = canvas.getContext("2d");
 const fileInput = document.querySelector("#fileInput");
 const thumbGrid = document.querySelector("#thumbGrid");
 const imageCount = document.querySelector("#imageCount");
+const copyButton = document.querySelector("#copyButton");
 const exportButton = document.querySelector("#exportButton");
 const dropOverlay = document.querySelector("#dropOverlay");
 const ratioPreset = document.querySelector("#ratioPreset");
@@ -701,16 +702,51 @@ function updateCursor(event) {
   }
 }
 
-function exportCanvas() {
+function createExportCanvas() {
   const exportCanvasElement = document.createElement("canvas");
   exportCanvasElement.width = OUTPUT_WIDTH;
   exportCanvasElement.height = OUTPUT_HEIGHT;
   render(exportCanvasElement.getContext("2d"), false, true);
+  return exportCanvasElement;
+}
 
+function exportCanvas() {
+  const exportCanvasElement = createExportCanvas();
   const link = document.createElement("a");
   link.download = `concat-photo-${Date.now()}.png`;
   link.href = exportCanvasElement.toDataURL("image/png");
   link.click();
+}
+
+async function copyCanvasToClipboard() {
+  const previousLabel = copyButton.textContent;
+
+  try {
+    if (!navigator.clipboard?.write || !window.ClipboardItem) {
+      throw new Error("Clipboard image writes are not supported.");
+    }
+
+    const exportCanvasElement = createExportCanvas();
+    const blob = await new Promise((resolve, reject) => {
+      exportCanvasElement.toBlob((result) => {
+        if (result) {
+          resolve(result);
+        } else {
+          reject(new Error("Unable to create PNG blob."));
+        }
+      }, "image/png");
+    });
+
+    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+    copyButton.textContent = "Copied";
+  } catch {
+    exportCanvas();
+    copyButton.textContent = "Downloaded";
+  } finally {
+    window.setTimeout(() => {
+      copyButton.textContent = previousLabel;
+    }, 1400);
+  }
 }
 
 function setRatio(height, width, shouldSave = true) {
@@ -731,6 +767,7 @@ document.addEventListener("paste", (event) => {
   if (files.length) addFiles(files);
 });
 
+copyButton.addEventListener("click", copyCanvasToClipboard);
 exportButton.addEventListener("click", exportCanvas);
 
 watermarkEnabled.addEventListener("change", () => {

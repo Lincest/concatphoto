@@ -94,6 +94,7 @@ h2 {
 }
 
 .primary-button,
+.secondary-button,
 .text-button {
   border: 1px solid var(--line);
   background: #fff;
@@ -112,6 +113,17 @@ h2 {
 
 .primary-button:hover {
   background: var(--accent-strong);
+}
+
+.secondary-button {
+  min-height: 42px;
+  padding: 0 16px;
+  font-weight: 750;
+}
+
+.secondary-button:hover {
+  border-color: var(--accent);
+  color: var(--accent-strong);
 }
 
 .text-button {

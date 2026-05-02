@@ -21,6 +21,7 @@ Supported actions:
 - Choose common presets like `15:9`, `16:9`, `9:16`, `4:3`, `3:4`, `3:2`, `2:3`, `1:1`, `21:9`, or a custom ratio.
 - Toggle and customize a small white bottom watermark.
 - Remember ratio and watermark preferences in the browser for the next visit.
+- Copy the rendered PNG to the clipboard when supported by the browser.
 - Export PNG. The default `15:9` output is `1200 x 2000`.
 
 ## Files
