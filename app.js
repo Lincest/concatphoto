@@ -40,6 +40,9 @@ const imageCount = document.querySelector("#imageCount");
 const copyButton = document.querySelector("#copyButton");
 const exportButton = document.querySelector("#exportButton");
 const dropOverlay = document.querySelector("#dropOverlay");
+const zoomSlider = document.querySelector("#zoomSlider");
+const zoomInput = document.querySelector("#zoomInput");
+const zoomHint = document.querySelector("#zoomHint");
 const ratioPreset = document.querySelector("#ratioPreset");
 const customRatioFields = document.querySelector("#customRatioFields");
 const customRatioHeight = document.querySelector("#customRatioHeight");
@@ -107,6 +110,38 @@ function syncControlsFromState() {
   layoutPattern.value = state.layoutPattern;
   watermarkEnabled.checked = state.watermarkEnabled;
   watermarkText.value = state.watermarkText;
+  syncZoomControls();
+}
+
+function getSelectedImage() {
+  return state.images.find((image) => image.id === state.selectedImageId) ?? null;
+}
+
+function syncZoomControls() {
+  const selectedImage = getSelectedImage();
+  const disabled = !selectedImage;
+  const zoomPercent = selectedImage ? Math.round((selectedImage.zoom || 1) * 100) : 100;
+
+  zoomSlider.disabled = disabled;
+  zoomInput.disabled = disabled;
+  zoomSlider.value = zoomPercent;
+  zoomInput.value = zoomPercent;
+  zoomHint.textContent = selectedImage ? "Adjust zoom for the selected photo." : "Select a photo to adjust zoom.";
+}
+
+function setSelectedImage(id) {
+  if (state.selectedImageId === id) return false;
+  state.selectedImageId = id;
+  syncZoomControls();
+  return true;
+}
+
+function setSelectedImageZoom(percent) {
+  const selectedImage = getSelectedImage();
+  if (!selectedImage) return;
+  selectedImage.zoom = clamp(Number(percent) / 100 || 1, MIN_IMAGE_ZOOM, MAX_IMAGE_ZOOM);
+  syncZoomControls();
+  drawPreview();
 }
 
 function updateCanvasSize() {
@@ -478,7 +513,7 @@ function renderThumbs() {
     });
 
     item.addEventListener("click", () => {
-      state.selectedImageId = image.id;
+      setSelectedImage(image.id);
       renderThumbs();
       drawPreview();
     });
@@ -518,7 +553,7 @@ function moveImageToIndex(sourceIndex, targetIndex) {
   if (sourceIndex === targetIndex || sourceIndex < 0 || targetIndex < 0) return;
   const [source] = state.images.splice(sourceIndex, 1);
   state.images.splice(targetIndex, 0, source);
-  state.selectedImageId = source.id;
+  setSelectedImage(source.id);
   rebuildLayout();
   renderThumbs();
   drawPreview();
@@ -534,7 +569,7 @@ function removeImage(id) {
   if (image) URL.revokeObjectURL(image.url);
   state.images = state.images.filter((item) => item.id !== id);
   if (state.selectedImageId === id) {
-    state.selectedImageId = state.images[0]?.id ?? null;
+    setSelectedImage(state.images[0]?.id ?? null);
   }
   rebuildLayout();
   renderThumbs();
@@ -582,7 +617,7 @@ async function importOneFile(file) {
       cropY: 0.5,
       zoom: 1,
     });
-    state.selectedImageId = state.images.at(-1).id;
+    setSelectedImage(state.images.at(-1).id);
     scheduleRender({ layout: true, thumbs: true });
   } catch {
     URL.revokeObjectURL(url);
@@ -852,6 +887,14 @@ document.addEventListener("paste", (event) => {
 copyButton.addEventListener("click", copyCanvasToClipboard);
 exportButton.addEventListener("click", exportCanvas);
 
+zoomSlider.addEventListener("input", () => {
+  setSelectedImageZoom(zoomSlider.value);
+});
+
+zoomInput.addEventListener("input", () => {
+  setSelectedImageZoom(zoomInput.value);
+});
+
 watermarkEnabled.addEventListener("change", () => {
   state.watermarkEnabled = watermarkEnabled.checked;
   savePreferences();
@@ -904,8 +947,7 @@ canvas.addEventListener("pointerdown", (event) => {
   const cell = hitTestCell(point);
   if (cell) {
     const nextSelectedId = state.images[cell.imageIndex]?.id ?? null;
-    const selectionChanged = state.selectedImageId !== nextSelectedId;
-    state.selectedImageId = nextSelectedId;
+    const selectionChanged = setSelectedImage(nextSelectedId);
     state.interaction = {
       type: "crop",
       cell,
@@ -966,6 +1008,7 @@ canvas.addEventListener(
     if (afterSource.overflowY > 0) {
       image.cropY = clamp((sourcePointY - afterSource.sourceHeight * localY) / afterSource.overflowY, 0, 1);
     }
+    syncZoomControls();
     drawPreview();
   },
   { passive: false },

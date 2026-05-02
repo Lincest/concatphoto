@@ -16,7 +16,7 @@ Supported actions:
 - Use compressed working images for smooth preview, then rerender exports from original images.
 - Drag canvas divider guides to resize photo regions.
 - Drag a photo inside its region to adjust crop position.
-- Click a photo and use the mouse wheel to zoom its crop.
+- Select a photo and adjust crop zoom with the slider, numeric input, or mouse wheel.
 - Press Backspace or Delete to remove the selected photo.
 - Drag a photo onto another canvas region to reorder the layout.
 - Drag thumbnails to reorder photos.

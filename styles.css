@@ -317,6 +317,13 @@ h2 {
   gap: 8px;
 }
 
+.zoom-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px;
+  gap: 8px;
+  align-items: center;
+}
+
 .field {
   display: grid;
   gap: 7px;

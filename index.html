@@ -45,6 +45,20 @@
 
         <section class="control-section">
           <div class="section-heading">
+            <h2>Selected Photo</h2>
+          </div>
+          <label class="field">
+            <span>Zoom</span>
+            <div class="zoom-control">
+              <input id="zoomSlider" type="range" min="100" max="400" step="1" value="100" disabled />
+              <input id="zoomInput" type="number" min="100" max="400" step="1" value="100" disabled />
+            </div>
+          </label>
+          <p class="hint" id="zoomHint">Select a photo to adjust zoom.</p>
+        </section>
+
+        <section class="control-section">
+          <div class="section-heading">
             <h2>Ratio</h2>
           </div>
           <label class="field">
