@@ -4,6 +4,8 @@ const PREVIEW_WIDTH = 1200;
 const EXPORT_LONG_EDGE = 2400;
 const MIN_CELL_RATIO = 0.12;
 const HANDLE_HIT_SIZE = 16;
+const MIN_IMAGE_ZOOM = 1;
+const MAX_IMAGE_ZOOM = 4;
 const BACKGROUND_COLOR = "#f3f5fb";
 const MAX_WORKING_IMAGE_EDGE = 2400;
 const IMPORT_CONCURRENCY = 2;
@@ -279,6 +281,7 @@ function cellRectWithGap(cell) {
 function imageSourceRect(image, rect, sourceWidth = image.width, sourceHeight = image.height) {
   const imageRatio = sourceWidth / sourceHeight;
   const rectRatio = rect.w / rect.h;
+  const zoom = clamp(image.zoom || 1, MIN_IMAGE_ZOOM, MAX_IMAGE_ZOOM);
   let cropWidth = sourceWidth;
   let cropHeight = sourceHeight;
 
@@ -287,6 +290,9 @@ function imageSourceRect(image, rect, sourceWidth = image.width, sourceHeight = 
   } else {
     cropHeight = sourceWidth / rectRatio;
   }
+
+  cropWidth /= zoom;
+  cropHeight /= zoom;
 
   const overflowX = sourceWidth - cropWidth;
   const overflowY = sourceHeight - cropHeight;
@@ -518,6 +524,11 @@ function moveImageToIndex(sourceIndex, targetIndex) {
   drawPreview();
 }
 
+function removeSelectedImage() {
+  if (!state.selectedImageId) return;
+  removeImage(state.selectedImageId);
+}
+
 function removeImage(id) {
   const image = state.images.find((item) => item.id === id);
   if (image) URL.revokeObjectURL(image.url);
@@ -569,6 +580,7 @@ async function importOneFile(file) {
       originalElement: img,
       cropX: 0.5,
       cropY: 0.5,
+      zoom: 1,
     });
     state.selectedImageId = state.images.at(-1).id;
     scheduleRender({ layout: true, thumbs: true });
@@ -930,6 +942,35 @@ canvas.addEventListener("pointermove", (event) => {
   drawPreview();
 });
 
+canvas.addEventListener(
+  "wheel",
+  (event) => {
+    const point = getCanvasPoint(event);
+    const cell = hitTestCell(point);
+    const image = cell ? state.images[cell.imageIndex] : null;
+    if (!image || image.id !== state.selectedImageId) return;
+
+    event.preventDefault();
+    const rect = cellRectWithGap(cell);
+    const beforeSource = imageSourceRect(image, rect, image.previewWidth, image.previewHeight);
+    const localX = clamp((point.x - rect.x) / rect.w, 0, 1);
+    const localY = clamp((point.y - rect.y) / rect.h, 0, 1);
+    const sourcePointX = beforeSource.sourceX + beforeSource.sourceWidth * localX;
+    const sourcePointY = beforeSource.sourceY + beforeSource.sourceHeight * localY;
+    const zoomFactor = event.deltaY < 0 ? 1.08 : 1 / 1.08;
+    image.zoom = clamp((image.zoom || 1) * zoomFactor, MIN_IMAGE_ZOOM, MAX_IMAGE_ZOOM);
+    const afterSource = imageSourceRect(image, rect, image.previewWidth, image.previewHeight);
+    if (afterSource.overflowX > 0) {
+      image.cropX = clamp((sourcePointX - afterSource.sourceWidth * localX) / afterSource.overflowX, 0, 1);
+    }
+    if (afterSource.overflowY > 0) {
+      image.cropY = clamp((sourcePointY - afterSource.sourceHeight * localY) / afterSource.overflowY, 0, 1);
+    }
+    drawPreview();
+  },
+  { passive: false },
+);
+
 canvas.addEventListener("pointerup", (event) => {
   if (state.interaction?.type === "crop") {
     const point = getCanvasPoint(event);
@@ -949,6 +990,21 @@ canvas.addEventListener("pointercancel", () => {
   state.interaction = null;
   canvas.style.cursor = "default";
   drawPreview();
+});
+
+document.addEventListener("keydown", (event) => {
+  const target = event.target;
+  const isEditable =
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement ||
+    target?.isContentEditable;
+
+  if (isEditable || !["Backspace", "Delete"].includes(event.key)) return;
+  if (!state.selectedImageId) return;
+
+  event.preventDefault();
+  removeSelectedImage();
 });
 
 ["dragenter", "dragover"].forEach((name) => {
