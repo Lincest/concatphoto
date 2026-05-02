@@ -18,7 +18,7 @@ Supported actions:
 - Drag a photo inside its region to adjust crop position.
 - Drag a photo onto another canvas region to reorder the layout.
 - Drag thumbnails to reorder photos.
-- Choose `15:9`, `4:3`, `3:2`, or a custom vertical ratio.
+- Choose common presets like `15:9`, `16:9`, `9:16`, `4:3`, `3:4`, `3:2`, `2:3`, `1:1`, `21:9`, or a custom ratio.
 - Toggle and customize a small white bottom watermark.
 - Remember ratio and watermark preferences in the browser for the next visit.
 - Export PNG. The default `15:9` output is `1200 x 2000`.

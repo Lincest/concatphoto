@@ -7,6 +7,7 @@ const MAX_WORKING_IMAGE_EDGE = 2400;
 const IMPORT_CONCURRENCY = 2;
 const DEFAULT_WATERMARK = `MOREALITYPHOTOGRAPH@${new Date().getFullYear()}`;
 const PREFERENCES_KEY = "concatphoto.preferences.v1";
+const RATIO_PRESETS = ["15:9", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "1:1", "21:9"];
 
 const state = {
   images: [],
@@ -54,7 +55,7 @@ function normalize(values) {
 
 function getRatioPresetValue(height, width) {
   const value = `${height}:${width}`;
-  return ["15:9", "4:3", "3:2"].includes(value) ? value : "custom";
+  return RATIO_PRESETS.includes(value) ? value : "custom";
 }
 
 function loadPreferences() {
