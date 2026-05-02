@@ -2,6 +2,8 @@
 
 A pure frontend photo collage tool for creating vertical image layouts.
 
+![Concat Photo demo](docs/demo.png)
+
 ## Usage
 
 Open `index.html` directly in a browser.
